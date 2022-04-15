@@ -2,7 +2,7 @@
 import argparse
 import pytorch_lightning as pl
 from models.infersent import InferSent
-from data.snli import SNLIDataModule
+from data import SNLIDataModule
 
 
 def train(args):
