@@ -1,8 +1,11 @@
 """Module for training an NLI InferSent model"""
 import argparse
+
+import torch
 import pytorch_lightning as pl
+
 from models.infersent import InferSent
-from data import SNLIDataModule
+import data
 
 
 def train(args):
@@ -21,13 +24,26 @@ def train(args):
         enable_progress_bar=args.progress_bar,
     )
     pl.seed_everything(args.seed)  # for reproducibility
+    # load data and setup data
+    snli = data.SNLIDataModule(args.batch_size, args.data_dir)
+    snli.prepare_data()
+    snli.setup()
+    # if we've provided pre-aligned glove embeddings tensor, then load directly
+    if args.aligned_glove:
+        aligned_glove = torch.load(args.aligned_glove)
+    else:
+        # otherwise we have to compute it from glove and our vocab
+        glove = data.GloVe(args.glove, 300)
+        aligned_glove = data.align_glove_to_vocab(glove, snli.vocab)
     # if checkpoint provided, load model from it, otherwise initialize new model
     if args.checkpoint_path:
         model = InferSent.load_from_checkpoint(args.checkpoint_path)
+        # glove embeddings are not saved in checkpoint so we have to load separately
+        model.load_embeddings(aligned_glove)
     else:
-        model = InferSent(args.encoder_type)
-    # load data
-    snli = SNLIDataModule(args.batch_size)
+        model = InferSent(args.encoder_type, snli.vocab)
+        # overwrite randomly initialized embeddings with glove
+        model.load_embeddings(aligned_glove)
     # first train
     trainer.fit(model, datamodule=snli)
     # evaluation on test set is handled by eval.py, where we also use SentEval
@@ -39,8 +55,8 @@ if __name__ == "__main__":
         "Test-set evaluation is deferred to eval.py"
     )
     parser.add_argument(
-        "--encoder_type",
         "-e",
+        "--encoder-type",
         type=str,
         help="one of 'baseline', 'lstm', 'bilstm', maxpoolbilstm'",
         required=True,
@@ -73,6 +89,22 @@ if __name__ == "__main__":
         type=str,
         help="path to log directory",
         default="logs/",
+    )
+    parser.add_argument(
+        "-d", "--data-dir", type=str, help="path to data directory", default="data/"
+    )
+    parser.add_argument(
+        "-g",
+        "--glove",
+        type=str,
+        help="path to glove embeddings",
+        default="data/glove.840B.300d.txt",
+    )
+    parser.add_argument(
+        "-ag",
+        "--aligned-glove",
+        help="path to aligned glove embeddings tensor",
+        type=str,
     )
     parser.add_argument(
         "-b",
