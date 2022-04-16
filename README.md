@@ -57,6 +57,7 @@ pip install -r requirements.txt
 │   ├── bilstm.py                         # model 3
 │   ├── maxpoolbilstm.py                  # model 4
 │   └── nli.py                            # Generic NLI model
+├── utils.py                           # for miscellaneous utils
 ├── data.py                            # for data loading and processing
 ├── train.py                           # for model training
 ├── eval.py                            # for model evaluation
