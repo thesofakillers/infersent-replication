@@ -68,15 +68,22 @@ pip install -r requirements.txt
 
 ```
 
-## Data and Models
+## Data, Pretrained Embeddings and Models
 
-The repository does not include the datasets used to train the models mentioned
-above, nor the trained model checkpoints themselves, as these are inappropriate
-for git version control.
+The repository does not include the datasets and pretrained embeddings used to
+train the models mentioned above, nor the trained model checkpoints themselves,
+as these are inappropriate for git version control.
 
 The datasets used are public and will be automatically downloaded when
-necessary, if not already downloaded. The same applies to the model checkpoints,
-hosted on the [Internet Archive](https://archive.org).
+necessary. The same applies to the model checkpoints, hosted on the
+[Internet Archive](https://archive.org).
+
+The public datasets and embeddings used are
+[SNLI](https://nlp.stanford.edu/projects/snli/) and 840B-token 300-d
+[GloVe](https://nlp.stanford.edu/projects/glove/) respectively. If users already
+have these locally and do not wish to re-download them, simply move (or
+symbolically link them) to a shared data directory, and then signal this
+directory and the resulting paths in the arguments for the scripts.
 
 ## Usage
 
