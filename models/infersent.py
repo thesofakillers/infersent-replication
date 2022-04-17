@@ -1,7 +1,7 @@
 """Generic InferSent model"""
 import torch
 import pytorch_lightning as pl
-import encoder
+import models.encoder as encoder
 
 
 class InferSent(pl.LightningModule):
