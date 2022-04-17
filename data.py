@@ -3,6 +3,7 @@ import os
 import zipfile
 from typing import Optional
 import argparse
+from collections import defaultdict
 
 import numpy as np
 import pytorch_lightning as pl
@@ -114,9 +115,18 @@ class Vocabulary:
     def __init__(self, pad="<pad>", unk="<unk>"):
         self.pad = pad
         self.unk = unk
-        self.word2idx = {self.pad: 0, self.unk: 1}
+        self.word2idx = defaultdict(
+            self._default_dict_default, {self.pad: 0, self.unk: 1}
+        )
         self.idx2word = {0: self.pad, 1: self.unk}
         self.num_words = 2
+
+    def _default_dict_default(self):
+        """
+        need a module-level function for pickle to work
+        https://stackoverflow.com/a/16439720/9889508
+        """
+        return 1
 
     def add_word(self, word: str):
         """
