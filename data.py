@@ -17,22 +17,65 @@ from utils import download_url
 class GloVe:
     """GloVe embeddings"""
 
-    def __init__(self, path: str, dim: int):
-        # filename without extension
+    def __init__(self, path: str, variant="840B300d"):
+        variant_map = {
+            "6B50d": {
+                "num_lines": 400000,
+                "url": "https://nlp.stanford.edu/data/glove.6B.zip",
+            },
+            "6B100d": {
+                "num_lines": 400000,
+                "url": "https://nlp.stanford.edu/data/glove.6B.zip",
+            },
+            "6B200d": {
+                "num_lines": 400000,
+                "url": "https://nlp.stanford.edu/data/glove.6B.zip",
+            },
+            "6B300d": {
+                "num_lines": 400000,
+                "url": "https://nlp.stanford.edu/data/glove.6B.zip",
+            },
+            "42B300d": {
+                "num_lines": 1917494,
+                "url": "https://nlp.stanford.edu/data/glove.42B.300d.zip",
+            },
+            "840B300d": {
+                "num_lines": 2196017,
+                "url": "https://nlp.stanford.edu/data/glove.840B.300d.zip",
+            },
+            "27B25d": {
+                "num_lines": 1193514,
+                "url": "https://nlp.stanford.edu/data/glove.twitter.27B.zip",
+            },
+            "27B50d": {
+                "num_lines": 1193514,
+                "url": "https://nlp.stanford.edu/data/glove.twitter.27B.zip",
+            },
+            "27B100d": {
+                "num_lines": 1193514,
+                "url": "https://nlp.stanford.edu/data/glove.twitter.27B.zip",
+            },
+            "27B200d": {
+                "num_lines": 1193514,
+                "url": "https://nlp.stanford.edu/data/glove.twitter.27B.zip",
+            },
+        }
+        assert variant in variant_map, "Variant {} not found".format(variant)
+        self.dim = int(variant.split("B")[1][:-1])
+        self.download_url = variant_map[variant]["url"]
+        self.num_lines = variant_map[variant]["num_lines"]
         self.filepath = path
         self.filename = os.path.splitext(os.path.basename(path))[0]
         self.dir = os.path.dirname(path) + "/"
         self.embeddings = {}
         self.vocab = set()
-        self.dim = dim
-        self.num_lines = 2196017
         self.load()
 
     def download_and_unzip(self):
         """Download embeddings"""
         print("Downloading GloVe embeddings...")
         download_url(
-            "https://nlp.stanford.edu/data/glove.840B.300d.zip",
+            self.download_url,
             os.path.join(self.dir, self.filename + ".zip"),
         )
         print("Unzipping GloVe embeddings...")
@@ -235,9 +278,9 @@ def setup_data(args):
     serializing processed data to disk to avoid having to do it again.
     """
     # (download and) parse glove
-    glove = GloVe(args.glove, 300)
+    glove = GloVe(args.glove, args.glove_variant)
     # (download and) parse snli
-    snli = SNLIDataModule(batch_size=32, data_dir=args.data_dir)
+    snli = SNLIDataModule(batch_size=args.batch_size, data_dir=args.data_dir)
     snli.prepare_data()
     snli.setup()
     # align glove to snli vocab
@@ -262,11 +305,25 @@ if __name__ == "__main__":
         default="data/glove.840B.300d.txt",
     )
     parser.add_argument(
+        "-gv",
+        "--glove-variant",
+        type=str,
+        help="which variant of glove embeddings to use",
+        default="840B300d",
+    )
+    parser.add_argument(
         "-ag",
         "--aligned-glove",
         help="path to save aligned glove embeddings tensor",
         type=str,
         required=True,
+    )
+    parser.add_argument(
+        "-b",
+        "--batch-size",
+        type=int,
+        help="batch size for training",
+        default=64,
     )
     args = parser.parse_args()
     setup_data(args)
