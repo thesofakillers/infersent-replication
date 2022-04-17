@@ -33,7 +33,7 @@ def train(args):
         aligned_glove = torch.load(args.aligned_glove)
     else:
         # otherwise we have to compute it from glove and our vocab
-        glove = data.GloVe(args.glove, 300)
+        glove = data.GloVe(args.glove, args.glove_variant)
         aligned_glove = data.align_glove_to_vocab(glove, snli.vocab)
     # if checkpoint provided, load model from it, otherwise initialize new model
     if args.checkpoint_path:
@@ -41,7 +41,7 @@ def train(args):
         # glove embeddings are not saved in checkpoint so we have to load separately
         model.load_embeddings(aligned_glove)
     else:
-        model = InferSent(args.encoder_type, snli.vocab)
+        model = InferSent(args.encoder_type, snli.vocab, aligned_glove.shape[1])
         # overwrite randomly initialized embeddings with glove
         model.load_embeddings(aligned_glove)
     # first train
@@ -99,6 +99,13 @@ if __name__ == "__main__":
         type=str,
         help="path to glove embeddings",
         default="data/glove.840B.300d.txt",
+    )
+    parser.add_argument(
+        "-gv",
+        "--glove-variant",
+        type=str,
+        help="which variant of glove embeddings to use",
+        default="840B300d",
     )
     parser.add_argument(
         "-ag",
