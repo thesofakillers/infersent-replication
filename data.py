@@ -150,11 +150,13 @@ class SNLIDataModule(pl.LightningDataModule):
     """
 
     def __init__(self, batch_size, data_dir, num_workers=4):
+        super().__init__()
         self.batch_size = batch_size
         self.data_dir = data_dir
         self.num_classes = 3
         self.num_workers = num_workers
         self.vocab = Vocabulary()
+        self.has_setup = False
 
     def prepare_data(self):
         """
@@ -167,6 +169,8 @@ class SNLIDataModule(pl.LightningDataModule):
         """
         set up data: preprocess and build vocabulary
         """
+        if self.has_setup:
+            return
         # get train and val splits
         train_data, val_data, test_data = datasets.load_dataset(
             path="snli", cache_dir=self.data_dir, split=("train", "validation", "test")
@@ -185,6 +189,8 @@ class SNLIDataModule(pl.LightningDataModule):
         self.train_data.set_format("torch", columns=["prem_idxs", "hypo_idxs", "label"])
         self.val_data.set_format("torch", columns=["prem_idxs", "hypo_idxs", "label"])
         self.test_data.set_format("torch", columns=["prem_idxs", "hypo_idxs", "label"])
+        # remember that we've already setup
+        self.has_setup = True
 
     def train_dataloader(self):
         """
@@ -256,12 +262,12 @@ class SNLIDataModule(pl.LightningDataModule):
             *[(el["label"], el["prem_idxs"], el["hypo_idxs"]) for el in batch]
         )
         # pad hypothesis and premise, keeping track of original lengths
-        prem_lens = torch.LongTensor([len(el) for el in prem])
+        prem_lens = torch.LongTensor([len(el) for el in prem]).unsqueeze(1)
         prem = torch.nn.utils.rnn.pad_sequence(prem, batch_first=True, padding_value=0)
-        hyp_lens = torch.LongTensor([len(el) for el in hyp])
+        hyp_lens = torch.LongTensor([len(el) for el in hyp]).unsqueeze(1)
         hyp = torch.nn.utils.rnn.pad_sequence(hyp, batch_first=True, padding_value=0)
         # return as tuple of premise, hypothesis and labels
-        return (prem, prem_lens), (hyp, hyp_lens), torch.Tensor(labels)
+        return (prem, prem_lens), (hyp, hyp_lens), torch.LongTensor(labels)
 
 
 def align_glove_to_vocab(glove: GloVe, vocab: Vocabulary) -> torch.Tensor:
