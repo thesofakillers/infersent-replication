@@ -2,17 +2,24 @@
 import torch
 import pytorch_lightning as pl
 import models.encoder as encoder
+from nltk.tokenize import word_tokenize
 
 
 class InferSent(pl.LightningModule):
-    """Generic InferSent model"""
+    """InferSent model"""
 
-    def __init__(self, encoder_type, vocab, emb_dim=300, num_classes=3, hidden_dim=512):
+    def __init__(self, encoder_type, vocab, emb_dim=300, hidden_dim=512):
         super().__init__()
         self._set_encoder(encoder_type, vocab, emb_dim)
+        self.inf2label = {
+            "entailment": 0,
+            "neutral": 1,
+            "contradiction": 2,
+        }
+        self.label2inf = {v: k for k, v in self.inf2label.items()}
         self.mlp = torch.nn.Sequential(
             torch.nn.Linear(4 * self.encoder.out_dim, hidden_dim),
-            torch.nn.Linear(hidden_dim, num_classes),
+            torch.nn.Linear(hidden_dim, 3),
         )
 
     def forward(self, prem_tuple, hyp_tuple):
@@ -94,3 +101,28 @@ class InferSent(pl.LightningModule):
         """Modifies checkpoint before saving by removing word-embeddings"""
         del checkpoint["state_dict"]["encoder.embeddings.weight"]
         del checkpoint["state_dict"]["encoder.embeddings.bias"]
+
+    def predict(self, premise: str, hypothesis: str, map_pred: bool = True):
+        """Predicts entailment for given premise and hypothesis"""
+        with torch.no_grad():
+            # prepare premise input
+            prem_tokens = word_tokenize(premise.lower())
+            prem_idxs = torch.LongTensor(
+                [self.encoder.vocab.word2idx[token] for token in prem_tokens]
+            ).unsqueeze(0)
+            prem_len = torch.LongTensor([len(prem_tokens)]).unsqueeze(0)
+            prem_tuple = (prem_idxs, prem_len)
+            # prepare hypothesis input
+            hyp_tokens = word_tokenize(hypothesis.lower())
+            hyp_idxs = torch.LongTensor(
+                [self.encoder.vocab.word2idx[token] for token in hyp_tokens]
+            ).unsqueeze(0)
+            hyp_len = torch.LongTensor([len(hyp_tokens)]).unsqueeze(0)
+            hyp_tuple = (hyp_idxs, hyp_len)
+            # predict label
+            y_pred = self.forward(prem_tuple, hyp_tuple)
+            label = y_pred.argmax(dim=1).item()
+            if map_pred:
+                return self.label2inf[label]
+            else:
+                return label
