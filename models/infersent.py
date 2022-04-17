@@ -7,16 +7,12 @@ import encoder
 class InferSent(pl.LightningModule):
     """Generic InferSent model"""
 
-    def __init__(self, encoder_type, vocab, num_classes=3, hidden_dim=512):
+    def __init__(self, encoder_type, vocab, emb_dim=300, num_classes=3, hidden_dim=512):
         super().__init__()
-        self._set_encoder(encoder_type, vocab)
-        self.num_classes = num_classes
-        self.hidden_dim = hidden_dim
-        self.loss = torch.nn.CrossEntropyLoss()
-        self.encoder_dim = self.encoder.encoder_dim
+        self._set_encoder(encoder_type, vocab, emb_dim)
         self.mlp = torch.nn.Sequential(
-            torch.nn.Linear(4 * self.encoder_dim, self.hidden_dim),
-            torch.nn.Linear(self.hidden_dim, self.num_classes),
+            torch.nn.Linear(4 * self.encoder.out_dim, hidden_dim),
+            torch.nn.Linear(hidden_dim, num_classes),
         )
 
     def forward(self, premise, hypothesis):
@@ -29,7 +25,7 @@ class InferSent(pl.LightningModule):
         out = self.mlp(relations)
         return out
 
-    def _set_encoder(self, encoder_type, vocab):
+    def _set_encoder(self, encoder_type, vocab, emb_dim):
         """Initializes and sets specific encoder"""
         assert encoder_type in [
             "baseline",
@@ -38,19 +34,19 @@ class InferSent(pl.LightningModule):
             "maxpoolbilstm",
         ], "Invalid encoder type: {}".format(encoder_type)
         if encoder_type == "baseline":
-            self.encoder = encoder.Baseline(vocab)
+            self.encoder = encoder.Baseline(vocab, emb_dim)
         elif encoder_type == "lstm":
-            self.encoder = encoder.LSTM(vocab)
+            self.encoder = encoder.LSTM(vocab, emb_dim)
         elif encoder_type == "bilstm":
-            self.encoder = encoder.BiLSTM(vocab)
+            self.encoder = encoder.BiLSTM(vocab, emb_dim)
         elif encoder_type == "maxpoolbilstm":
-            self.encoder = encoder.MaxPoolBiLSTM(vocab)
+            self.encoder = encoder.MaxPoolBiLSTM(vocab, emb_dim)
 
     def _shared_step(self, batch):
         """Passes batch through model and computes loss and accuracy"""
         premise, hypothesis, y_true = batch
         y_pred = self.forward(premise, hypothesis)
-        loss = self.loss(y_pred, y_true)
+        loss = torch.nn.functional.cross_entropy(y_pred, y_true)
         acc = torch.mean((y_pred.argmax(dim=1) == y_true).float())
         return loss, acc
 
