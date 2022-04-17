@@ -245,11 +245,13 @@ class SNLIDataModule(pl.LightningDataModule):
         labels, prem, hyp = zip(
             *[(el["label"], el["prem_idxs"], el["hypo_idxs"]) for el in batch]
         )
-        # pad hypothesis and premise
+        # pad hypothesis and premise, keeping track of original lengths
+        prem_lens = torch.LongTensor([len(el) for el in prem])
         prem = torch.nn.utils.rnn.pad_sequence(prem, batch_first=True, padding_value=0)
+        hyp_lens = torch.LongTensor([len(el) for el in hyp])
         hyp = torch.nn.utils.rnn.pad_sequence(hyp, batch_first=True, padding_value=0)
         # return as tuple of premise, hypothesis and labels
-        return prem, hyp, torch.Tensor(labels)
+        return (prem, prem_lens), (hyp, hyp_lens), torch.Tensor(labels)
 
 
 def align_glove_to_vocab(glove: GloVe, vocab: Vocabulary) -> torch.Tensor:

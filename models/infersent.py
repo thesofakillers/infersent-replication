@@ -15,10 +15,10 @@ class InferSent(pl.LightningModule):
             torch.nn.Linear(hidden_dim, num_classes),
         )
 
-    def forward(self, premise, hypothesis):
+    def forward(self, prem_tuple, hyp_tuple):
         """Forward pass"""
-        u = self.encoder(premise)
-        v = self.encoder(hypothesis)
+        u = self.encoder(prem_tuple)
+        v = self.encoder(hyp_tuple)
 
         relations = torch.cat((u, v, torch.abs(u - v), u * v), dim=1)
 
