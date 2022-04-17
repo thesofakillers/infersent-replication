@@ -10,6 +10,7 @@ class InferSent(pl.LightningModule):
 
     def __init__(self, encoder_type, vocab, emb_dim=300, hidden_dim=512):
         super().__init__()
+        self.save_hyperparameters()
         self._set_encoder(encoder_type, vocab, emb_dim)
         self.inf2label = {
             "entailment": 0,
@@ -63,7 +64,7 @@ class InferSent(pl.LightningModule):
         self.log_dict({"train_loss": loss, "train_acc": acc}, prog_bar=True)
         return loss
 
-    def val_step(self, batch, batch_idx):
+    def validation_step(self, batch, batch_idx):
         """Validation step"""
         loss, acc = self._shared_step(batch)
         self.log_dict({"val_loss": loss, "val_acc": acc}, prog_bar=True)
@@ -73,25 +74,23 @@ class InferSent(pl.LightningModule):
         """Handles optimizers and schedulers"""
         # "we use SGD with a learning rate of 0.1"
         optimizer = torch.optim.SGD(self.parameters(), lr=0.1)
-        chained_scheduler = torch.optim.lr_scheduler.ChainedScheduler(
-            [
-                # "and a weight decay of 0.99"
-                torch.optim.lr_scheduler.StepLR(optimizer, 1, 0.99),
-                # "we divide the learning rate by 5 if the dev accuracy decreases"
-                torch.optim.lr_scheduler.ReduceLROnPlateau(
-                    optimizer=optimizer, mode="max", factor=0.2, patience=0
-                ),
-            ]
+        step_scheduler = torch.optim.lr_scheduler.StepLR(optimizer, 1, 0.99)
+        plateau_scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
+            optimizer=optimizer, mode="max", factor=0.2, patience=0
         )
-        return {
-            "optimizer": optimizer,
-            "lr_scheduler": {
-                "scheduler": chained_scheduler,
+        return [optimizer], [
+            {
+                "scheduler": step_scheduler,
+                "interval": "epoch",
+                "frequency": 1,
+            },
+            {
+                "scheduler": plateau_scheduler,
                 "interval": "epoch",
                 "frequency": 1,
                 "monitor": "val_acc",
             },
-        }
+        ]
 
     def load_embeddings(self, embeddings):
         """loads pretrained embeddings"""
@@ -100,7 +99,6 @@ class InferSent(pl.LightningModule):
     def on_save_checkpoint(self, checkpoint):
         """Modifies checkpoint before saving by removing word-embeddings"""
         del checkpoint["state_dict"]["encoder.embeddings.weight"]
-        del checkpoint["state_dict"]["encoder.embeddings.bias"]
 
     def predict(self, premise: str, hypothesis: str, map_pred: bool = True):
         """Predicts entailment for given premise and hypothesis"""
