@@ -8,10 +8,10 @@ from nltk.tokenize import word_tokenize
 class InferSent(pl.LightningModule):
     """InferSent model"""
 
-    def __init__(self, encoder_type, vocab, emb_dim=300, hidden_dim=512):
+    def __init__(self, encoder_type, vocab, word_emb_dim=300, hidden_dim=512):
         super().__init__()
         self.save_hyperparameters()
-        self._set_encoder(encoder_type, vocab, emb_dim)
+        self._set_encoder(encoder_type, vocab, word_emb_dim)
         self.inf2label = {
             "entailment": 0,
             "neutral": 1,
@@ -99,6 +99,13 @@ class InferSent(pl.LightningModule):
     def on_save_checkpoint(self, checkpoint):
         """Modifies checkpoint before saving by removing word-embeddings"""
         del checkpoint["state_dict"]["encoder.embeddings.weight"]
+
+    def on_load_checkpoint(self, checkpoint):
+        """Loaded checkpoint is missing the word-embeddings, so we init them again"""
+        checkpoint["state_dict"]["encoder.embeddings.weight"] = torch.nn.Parameter(
+            torch.randn(self.encoder.vocab.num_words, self.encoder.word_emb_dim),
+            requires_grad=False,
+        )
 
     def predict(self, premise: str, hypothesis: str, map_pred: bool = True):
         """Predicts entailment for given premise and hypothesis"""
