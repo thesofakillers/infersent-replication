@@ -45,8 +45,34 @@ class Baseline(Encoder):
         """Forward pass"""
         # sent is B x L, where L is max(sent_len), B is batch size; sent_len is B x 1
         sent, sent_len = sent_tuple
-        # embeddings is B x L x E, E is self.emb_dim
+        # embeddings is B x L x E, E is self.word_emb_dim
         emb = self.embeddings(sent)
         # out is B X E
         out = emb.sum(dim=1) / sent_len
         return out
+
+
+class LSTM(Encoder):
+    """LSTM encoder"""
+
+    def __init__(self, vocab, word_emb_dim):
+        super(LSTM, self).__init__(vocab, word_emb_dim)
+        self.out_dim = 2048
+        self.lstm = nn.LSTM(word_emb_dim, self.out_dim, batch_first=True)
+
+    def forward(self, sent_tuple):
+        """
+        Forward pass. Need to pack and pad.
+        We are interested in the final hidden state of the LSTM.
+        """
+        # sent is B x L, where L is max(sent_len), B is batch size; sent_len is B x 1
+        sent, sent_len = sent_tuple
+        # embeddings is B x L x E, E is self.word_emb_dim
+        emb = self.embeddings(sent)
+        # packing for LSTM
+        packed_emb = nn.utils.rnn.pack_padded_sequence(
+            emb, sent_len.squeeze(1), batch_first=True, enforce_sorted=False
+        )
+        # h_t is 1 X B x H, where H is self.out_dim
+        _out, (h_t, _c_t) = self.lstm(packed_emb)
+        return h_t.squeeze(0)
