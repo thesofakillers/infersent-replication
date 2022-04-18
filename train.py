@@ -31,7 +31,9 @@ def train(args):
     )
     pl.seed_everything(args.seed)  # for reproducibility
     # load data and setup data
-    snli = SNLIDataModule(args.batch_size, args.data_dir, 4, args.cached_vocab)
+    snli = SNLIDataModule(
+        args.batch_size, args.data_dir, args.num_workers, args.cached_vocab
+    )
     snli.prepare_data()
     snli.setup()
     # if we've provided pre-aligned glove embeddings tensor, then load directly
@@ -132,6 +134,13 @@ if __name__ == "__main__":
         help="path to save/load serialized vocabulary",
         type=str,
         default="data/cached_vocab.pkl",
+    )
+    parser.add_argument(
+        "-w",
+        "--num-workers",
+        type=int,
+        help="number of workers for data loading",
+        default=4,
     )
 
     args = parser.parse_args()
