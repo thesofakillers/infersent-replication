@@ -76,3 +76,31 @@ class LSTM(Encoder):
         # h_t is 1 X B x H, where H is self.out_dim
         _out, (h_t, _c_t) = self.lstm(packed_emb)
         return h_t.squeeze(0)
+
+
+class BiLSTM(Encoder):
+    """LSTM encoder"""
+
+    def __init__(self, vocab, word_emb_dim):
+        super(BiLSTM, self).__init__(vocab, word_emb_dim)
+        self.out_dim = 4096
+        self.bilstm = nn.LSTM(word_emb_dim, 2048, batch_first=True, bidirectional=True)
+
+    def forward(self, sent_tuple):
+        """
+        Forward pass. Need to pack and pad.
+        We are interested in the final hidden state of the BiLSTM.
+        """
+        # sent is B x L, where L is max(sent_len), B is batch size; sent_len is B x 1
+        sent, sent_len = sent_tuple
+        # embeddings is B x L x E, E is self.word_emb_dim
+        emb = self.embeddings(sent)
+        # packing for LSTM
+        packed_emb = nn.utils.rnn.pack_padded_sequence(
+            emb, sent_len.squeeze(1), batch_first=True, enforce_sorted=False
+        )
+        # h_t is 2 X B x H, where H is self.out_dim
+        _out, (h_t, _c_t) = self.bilstm(packed_emb)
+        # we concatenate the final hidden states of the forward and backward LSTMs
+        out = torch.cat((h_t[0], h_t[1]), dim=1)
+        return out
