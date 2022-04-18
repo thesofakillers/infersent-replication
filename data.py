@@ -4,6 +4,7 @@ import zipfile
 from typing import Optional
 import argparse
 from collections import defaultdict
+import pickle
 
 import numpy as np
 import pytorch_lightning as pl
@@ -149,14 +150,42 @@ class SNLIDataModule(pl.LightningDataModule):
     PyTorch Lightning Data Module for SNLI dataset.
     """
 
-    def __init__(self, batch_size, data_dir, num_workers=4):
+    def __init__(
+        self,
+        batch_size,
+        data_dir,
+        num_workers=4,
+        cached_vocab_path: Optional[str] = None,
+    ):
         super().__init__()
         self.batch_size = batch_size
         self.data_dir = data_dir
         self.num_classes = 3
         self.num_workers = num_workers
-        self.vocab = Vocabulary()
+        self.cached_vocab_path = cached_vocab_path
+        self.cached_vocab = False
+        self._setup_vocab()
         self.has_setup = False
+
+    def _setup_vocab(self):
+        """
+        Either initializes an empty vocabulary or loads it from a file
+        """
+        if self.cached_vocab_path is not None:
+            if os.path.exists(self.cached_vocab_path):
+                print(
+                    "Loading cached vocabulary from {}".format(self.cached_vocab_path)
+                )
+                with open(self.cached_vocab_path, "rb") as f:
+                    self.vocab = pickle.load(f)
+                self.cached_vocab = True
+            else:
+                print(
+                    "Cached vocabulary not found at {}".format(self.cached_vocab_path)
+                )
+                self.vocab = Vocabulary()
+        else:
+            self.vocab = Vocabulary()
 
     def prepare_data(self):
         """
@@ -172,19 +201,21 @@ class SNLIDataModule(pl.LightningDataModule):
         if self.has_setup:
             return
         # get train and val splits
-        train_data, val_data, test_data = datasets.load_dataset(
-            path="snli", cache_dir=self.data_dir, split=("train", "validation", "test")
+        self.train_data, self.val_data, self.test_data = datasets.load_dataset(
+            path="snli",
+            cache_dir=self.data_dir,
+            split=("train", "validation", "test"),
         )
         # filter out non gold labels
         print("Filtering out non-gold labels...")
-        train_data = train_data.filter(lambda row: row["label"] >= 0)
-        val_data = val_data.filter(lambda row: row["label"] >= 0)
-        test_data = test_data.filter(lambda row: row["label"] >= 0)
+        self.train_data = self.train_data.filter(lambda row: row["label"] >= 0)
+        self.val_data = self.val_data.filter(lambda row: row["label"] >= 0)
+        self.test_data = self.test_data.filter(lambda row: row["label"] >= 0)
         # process (lowercase and tokenize), populate the vocab and save as inst vars
         print("Processing data and building Vocab...")
-        self.train_data = self._process_data(train_data)
-        self.val_data = self._process_data(val_data)
-        self.test_data = self._process_data(test_data)
+        self.train_data = self._process_data(self.train_data)
+        self.val_data = self._process_data(self.val_data)
+        self.test_data = self._process_data(self.test_data)
         # convert to torch
         self.train_data.set_format("torch", columns=["prem_idxs", "hypo_idxs", "label"])
         self.val_data.set_format("torch", columns=["prem_idxs", "hypo_idxs", "label"])
@@ -228,16 +259,16 @@ class SNLIDataModule(pl.LightningDataModule):
             collate_fn=self._collate_fn,
         )
 
-    def _process_sentence(self, sentence: str):
+    def _process_sentence(self, sentence: str, build_vocab: bool):
         """
         lower-cases and tokenises a sentence, while updating the vocab
         then converts a sentence to sequence of indices
         """
         tokens = word_tokenize(sentence.lower())
-        # while we're at it, we can build our vocab
-        for token in tokens:
-            # add_word checks if the word is not already in the vocab
-            self.vocab.add_word(token)
+        if build_vocab:
+            for token in tokens:
+                # add_word checks if the word is not already in the vocab
+                self.vocab.add_word(token)
         indices = [self.vocab.word2idx[token] for token in tokens]
         return indices
 
@@ -248,10 +279,14 @@ class SNLIDataModule(pl.LightningDataModule):
         """
         return dataset.map(
             lambda row: {
-                "prem_idxs": self._process_sentence(row["premise"]),
-                "hypo_idxs": self._process_sentence(row["hypothesis"]),
+                "prem_idxs": self._process_sentence(
+                    row["premise"], not self.cached_vocab
+                ),
+                "hypo_idxs": self._process_sentence(
+                    row["hypothesis"], not self.cached_vocab
+                ),
             },
-            load_from_cache_file=False,
+            load_from_cache_file=self.cached_vocab,
         ).remove_columns(["premise", "hypothesis"])
 
     def _collate_fn(self, batch):
@@ -298,9 +333,18 @@ def setup_data(args):
     # (download and) parse glove
     glove = GloVe(args.glove, args.glove_variant)
     # (download and) parse snli
-    snli = SNLIDataModule(batch_size=args.batch_size, data_dir=args.data_dir)
+    snli = SNLIDataModule(
+        batch_size=args.batch_size,
+        data_dir=args.data_dir,
+        cached_vocab_path=args.cached_vocab,
+    )
     snli.prepare_data()
     snli.setup()
+    # save vocab if we don't have it already
+    if not snli.cached_vocab:
+        print("Saving vocab to {}".format(args.cached_vocab))
+        with open(args.cached_vocab, "wb") as f:
+            pickle.dump(snli.vocab, f)
     # align glove to snli vocab
     aligned_glove = align_glove_to_vocab(glove, snli.vocab)
     print("Saving aligned GloVe embeddings to disk...")
@@ -342,6 +386,12 @@ if __name__ == "__main__":
         type=int,
         help="batch size for training",
         default=64,
+    )
+    parser.add_argument(
+        "-cv",
+        "--cached-vocab",
+        help="path to save/load serialized vocabulary",
+        type=str,
     )
     args = parser.parse_args()
     setup_data(args)
