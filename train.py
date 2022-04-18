@@ -5,7 +5,7 @@ import torch
 import pytorch_lightning as pl
 
 from models.infersent import InferSent
-import data
+from data import Vocabulary, SNLIDataModule
 import utils
 
 
@@ -31,7 +31,7 @@ def train(args):
     )
     pl.seed_everything(args.seed)  # for reproducibility
     # load data and setup data
-    snli = data.SNLIDataModule(args.batch_size, args.data_dir, 4, args.cached_vocab)
+    snli = SNLIDataModule(args.batch_size, args.data_dir, 4, args.cached_vocab)
     snli.prepare_data()
     snli.setup()
     # if we've provided pre-aligned glove embeddings tensor, then load directly
