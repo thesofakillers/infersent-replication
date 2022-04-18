@@ -23,6 +23,11 @@ Evaluation is then done with [SentEval](https://aclanthology.org/L18-1269/).
 Details such as python and package versions can be found in the generated
 [pyproject.toml](pyproject.toml) and [poetry.lock](poetry.lock) files.
 
+We recommend using an environment manager such as
+[conda](https://docs.conda.io/en/latest/). After setting up your environment
+with the correct python version, please proceed with the installation of the
+required packages
+
 For [poetry](https://python-poetry.org/) users, getting setup is as easy as
 running
 
@@ -30,17 +35,9 @@ running
 poetry install
 ```
 
-We also provide an [environment.yml](environment.yml) file for
-[Conda](https://docs.conda.io/projects/conda/en/latest/index.html) users who do
-not wish to use poetry. In this case simply run
-
-```terminal
-conda env create -f environment.yml
-```
-
-Finally, if neither of the above options are desired, we also provide a
-[requirements.txt](requirements.txt) file for
-[pip](https://pypi.org/project/pip/) users. In this case, simply run
+We also provide a [requirements.txt](requirements.txt) file for
+[pip](https://pypi.org/project/pip/) users who do not wish to use poetry.. In
+this case, simply run
 
 ```terminal
 pip install -r requirements.txt
