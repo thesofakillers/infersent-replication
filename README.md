@@ -52,11 +52,8 @@ pip install -r requirements.txt
 .
 ├── models                             # models folder
 │   ├── __init__.py
-│   ├── baseline.py                       # model 1
-│   ├── lstm.py                           # model 2
-│   ├── bilstm.py                         # model 3
-│   ├── maxpoolbilstm.py                  # model 4
-│   └── nli.py                            # Generic NLI model
+│   ├── encoder.py                     # sentence encoder models
+│   └── infersent.py                   # Generic NLI model
 ├── utils.py                           # for miscellaneous utils
 ├── data.py                            # for data loading and processing
 ├── train.py                           # for model training
@@ -65,6 +62,7 @@ pip install -r requirements.txt
 ├── demo.ipynb                         # demo jupyter notebook
 ├── pyproject.toml                     # repo metadata
 ├── poetry.lock
+├── gen_pip_conda_files.sh             # script for gen. pip and conda files
 └── README.md                          # you are here
 
 ```
@@ -88,20 +86,91 @@ directory and the resulting paths in the arguments for the scripts.
 
 ## Usage
 
-TODO
-
 ### Demo
 
-The notebook comes with a demo [Jupyter Notebook](https://jupyter.org/) that
+The repository comes with a demo [Jupyter Notebook](https://jupyter.org/) that
 allows users to load a trained model and run inference on different examples.
 
 The notebook also provides an overview and analysis of the results.
 
 For more fine-grained usage, please refer to the following sections.
 
+### Data and Embeddings
+
+When called directly, `data.py` script will take care of setting up data and
+embedding requirements for you. In particular, it will
+
+1. Download GloVe embeddings if the embeddings .txt file is not found.
+2. Parse the embeddings .txt file.
+3. Download the SNLI dataset if they are not already downloaded.
+4. Process the SNLI dataset, building the vocabulary in the process.
+5. Save the vocab to disk, to avoid having to build it again.
+6. Align GloVe embeddings to the vocab.
+7. Save the aligned glove embeddings as a Tensor to disk.
+
+For usage:
+
+```stdout
+usage: data.py [-h] [-d DATA_DIR] [-g GLOVE] [-gv GLOVE_VARIANT] -ag
+               ALIGNED_GLOVE [-b BATCH_SIZE] [-cv CACHED_VOCAB]
+
+Sets up data: downloads data and aligns GloVe embeddings to SNLI vocab.
+
+options:
+  -h, --help            show this help message and exit
+  -d DATA_DIR, --data-dir DATA_DIR
+                        path to data directory
+  -g GLOVE, --glove GLOVE
+                        path to glove embeddings
+  -gv GLOVE_VARIANT, --glove-variant GLOVE_VARIANT
+                        which variant of glove embeddings to use
+  -ag ALIGNED_GLOVE, --aligned-glove ALIGNED_GLOVE
+                        path to save aligned glove embeddings tensor
+  -b BATCH_SIZE, --batch-size BATCH_SIZE
+                        batch size for training
+  -cv CACHED_VOCAB, --cached-vocab CACHED_VOCAB
+                        path to save/load serialized vocabulary
+```
+
 ### Training
 
-TODO
+We use `train.py` for training. Most arguments should work fine with default
+values.
+
+For usage:
+
+```stdout
+usage: train.py [-h] -e ENCODER_TYPE [-c CHECKPOINT_PATH] [-cd CHECKPOINT_DIR]
+                [-s SEED] [-p] [-l LOG_DIR] [-d DATA_DIR] [-g GLOVE]
+                [-gv GLOVE_VARIANT] [-ag ALIGNED_GLOVE] [-b BATCH_SIZE]
+
+Trains an InferSent model. Test-set evaluation is deferred to eval.py
+
+options:
+  -h, --help            show this help message and exit
+  -e ENCODER_TYPE, --encoder-type ENCODER_TYPE
+                        one of 'baseline', 'lstm', 'bilstm', maxpoolbilstm'
+  -c CHECKPOINT_PATH, --checkpoint-path CHECKPOINT_PATH
+                        path for loading previously saved checkpoint
+  -cd CHECKPOINT_DIR, --checkpoint-dir CHECKPOINT_DIR
+                        where to save checkpoints. Defaults to the current
+                        working directory
+  -s SEED, --seed SEED  the random seed to use
+  -p, --progress-bar    whether to show the progress bar
+  -l LOG_DIR, --log-dir LOG_DIR
+                        path to log directory
+  -d DATA_DIR, --data-dir DATA_DIR
+                        path to data directory
+  -g GLOVE, --glove GLOVE
+                        path to glove embeddings
+  -gv GLOVE_VARIANT, --glove-variant GLOVE_VARIANT
+                        which variant of glove embeddings to use
+  -ag ALIGNED_GLOVE, --aligned-glove ALIGNED_GLOVE
+                        path to aligned glove embeddings tensor
+  -b BATCH_SIZE, --batch-size BATCH_SIZE
+                        batch size for training
+
+```
 
 ### Inference
 
