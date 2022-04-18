@@ -156,6 +156,7 @@ class SNLIDataModule(pl.LightningDataModule):
         data_dir,
         num_workers=4,
         cached_vocab_path: Optional[str] = None,
+        test: bool = False,
     ):
         super().__init__()
         self.batch_size = batch_size
@@ -166,6 +167,7 @@ class SNLIDataModule(pl.LightningDataModule):
         self.cached_vocab = False
         self._setup_vocab()
         self.has_setup = False
+        self.test = test
 
     def _setup_vocab(self):
         """
@@ -200,11 +202,14 @@ class SNLIDataModule(pl.LightningDataModule):
         """
         if self.has_setup:
             return
+        split = (
+            ("train", "validation", "test")
+            if not self.test
+            else ("validation", "validation", "test")
+        )
         # get train and val splits
         self.train_data, self.val_data, self.test_data = datasets.load_dataset(
-            path="snli",
-            cache_dir=self.data_dir,
-            split=("train", "validation", "test"),
+            path="snli", cache_dir=self.data_dir, split=split
         )
         # filter out non gold labels
         print("Filtering out non-gold labels...")
