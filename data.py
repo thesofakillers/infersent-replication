@@ -359,7 +359,7 @@ def setup_data(args):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description="Sets up data:"
-        "downloads data and aligns GloVe embeddings to SNLI vocab."
+        " downloads data and aligns GloVe embeddings to SNLI vocab."
     )
     parser.add_argument(
         "-d", "--data-dir", type=str, help="path to data directory", default="data/"
