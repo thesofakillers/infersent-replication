@@ -57,8 +57,9 @@ class LSTM(Encoder):
 
     def __init__(self, vocab, word_emb_dim):
         super(LSTM, self).__init__(vocab, word_emb_dim)
+        self.hid_dim = 2048
         self.out_dim = self.hid_dim
-        self.lstm = nn.LSTM(word_emb_dim, self.out_dim, batch_first=True)
+        self.lstm = nn.LSTM(word_emb_dim, self.hid_dim, batch_first=True)
 
     def forward(self, sent_tuple):
         """
