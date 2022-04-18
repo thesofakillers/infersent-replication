@@ -24,6 +24,8 @@ def train(args):
         monitor="lr_log", patience=0, mode="min", stopping_threshold=1e-5
     )
     trainer = pl.Trainer(
+        devices="auto",
+        accelerator="auto",
         default_root_dir=args.checkpoint_dir,
         logger=logger,
         enable_progress_bar=args.progress_bar,
