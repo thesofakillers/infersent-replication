@@ -72,7 +72,7 @@ class LSTM(Encoder):
         emb = self.embeddings(sent)
         # packing for LSTM
         packed_emb = nn.utils.rnn.pack_padded_sequence(
-            emb, sent_len.squeeze(1), batch_first=True, enforce_sorted=False
+            emb, sent_len.squeeze(1).to("cpu"), batch_first=True, enforce_sorted=False
         )
         # h_t is 1 X B x H, where H is self.out_dim
         _out, (h_t, _c_t) = self.lstm(packed_emb)
@@ -101,7 +101,7 @@ class BiLSTM(Encoder):
         emb = self.embeddings(sent)
         # packing for LSTM
         packed_emb = nn.utils.rnn.pack_padded_sequence(
-            emb, sent_len.squeeze(1), batch_first=True, enforce_sorted=False
+            emb, sent_len.squeeze(1).to("cpu"), batch_first=True, enforce_sorted=False
         )
         # h_t is 2 X B x H, where H is self.hid_dim
         _out, (h_t, _c_t) = self.bilstm(packed_emb)
@@ -132,7 +132,7 @@ class MaxPoolBiLSTM(Encoder):
         emb = self.embeddings(sent)
         # packing for LSTM
         packed_emb = nn.utils.rnn.pack_padded_sequence(
-            emb, sent_len.squeeze(1), batch_first=True, enforce_sorted=False
+            emb, sent_len.squeeze(1).to("cpu"), batch_first=True, enforce_sorted=False
         )
         # out is h_t at each t. shape is B x L x 2 * H, where H is self.hid_dim
         out_packed, (_h_t, _c_t) = self.bilstm(packed_emb)
