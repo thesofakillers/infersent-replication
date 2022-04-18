@@ -6,18 +6,18 @@ from nltk.tokenize import word_tokenize
 class Encoder(nn.Module):
     """Base encoder class other encoders inherit from"""
 
-    def __init__(self, vocab, emb_dim):
+    def __init__(self, vocab, word_emb_dim):
         super(Encoder, self).__init__()
-        self.emb_dim = emb_dim
+        self.word_emb_dim = word_emb_dim
         self.vocab = vocab
-        self.embeddings = nn.Embedding(vocab.num_words, emb_dim)
+        self.embeddings = nn.Embedding(vocab.num_words, word_emb_dim)
         self.embeddings.weight.requires_grad = False
         # needs to be implemented in subclasses
         self.out_dim = None
 
     def load_embeddings(self, embeddings):
         """Load embeddings from a torch tensor"""
-        self.embeddings.from_pretrained(embeddings, freeze=True)
+        self.embeddings.weight = torch.nn.Parameter(embeddings, requires_grad=False)
 
     def forward(self, sent_tuple):
         """Forward pass: to be implemented in subclasses"""
@@ -37,9 +37,9 @@ class Encoder(nn.Module):
 class Baseline(Encoder):
     """Baseline encoder"""
 
-    def __init__(self, vocab, emb_dim):
-        super(Baseline, self).__init__(vocab, emb_dim)
-        self.out_dim = emb_dim
+    def __init__(self, vocab, word_emb_dim):
+        super(Baseline, self).__init__(vocab, word_emb_dim)
+        self.out_dim = word_emb_dim
 
     def forward(self, sent_tuple):
         """Forward pass"""
