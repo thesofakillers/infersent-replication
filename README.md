@@ -59,7 +59,7 @@ pip install -r requirements.txt
 ├── demo.ipynb                         # demo jupyter notebook
 ├── pyproject.toml                     # repo metadata
 ├── poetry.lock
-├── gen_pip_conda_files.sh             # script for gen. pip and conda files
+├── gen_pip_reqs.sh                    # script for gen. pip requirements
 └── README.md                          # you are here
 
 ```
