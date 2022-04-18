@@ -6,6 +6,7 @@ import pytorch_lightning as pl
 
 from models.infersent import InferSent
 import data
+import utils
 
 
 def train(args):
@@ -18,10 +19,15 @@ def train(args):
         save_dir=args.log_dir,
         name=args.model_type,
     )
+    lr_monitor = utils.HackedLearningRateMonitor(logging_interval="epoch")
+    early_stopper = pl.callbacks.EarlyStopping(
+        monitor="lr_log", patience=0, mode="min", stopping_threshold=1e-5
+    )
     trainer = pl.Trainer(
         default_root_dir=args.checkpoint_dir,
         logger=logger,
         enable_progress_bar=args.progress_bar,
+        callbacks=[lr_monitor, early_stopper],
     )
     pl.seed_everything(args.seed)  # for reproducibility
     # load data and setup data

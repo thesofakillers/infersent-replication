@@ -80,11 +80,13 @@ class InferSent(pl.LightningModule):
         )
         return [optimizer], [
             {
+                "name": "lr_log",
                 "scheduler": step_scheduler,
                 "interval": "epoch",
                 "frequency": 1,
             },
             {
+                "name": "lr_log",
                 "scheduler": plateau_scheduler,
                 "interval": "epoch",
                 "frequency": 1,
