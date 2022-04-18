@@ -17,7 +17,7 @@ def train(args):
     # set up logger, trainer and seed
     logger = pl.loggers.TensorBoardLogger(
         save_dir=args.log_dir,
-        name=args.model_type,
+        name=args.encoder_type,
     )
     lr_monitor = utils.HackedLearningRateMonitor(logging_interval="epoch")
     early_stopper = pl.callbacks.EarlyStopping(
