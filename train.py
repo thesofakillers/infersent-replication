@@ -19,6 +19,9 @@ def train(args):
         save_dir=args.log_dir,
         name=args.encoder_type,
     )
+    checkpoint_callback = pl.callbacks.ModelCheckpoint(
+        dirpath=args.checkpoint_dir, save_top_k=1, monitor="val_acc", mode="max"
+    )
     lr_monitor = utils.HackedLearningRateMonitor(logging_interval="epoch")
     early_stopper = pl.callbacks.EarlyStopping(
         monitor="lr_log", patience=0, mode="min", stopping_threshold=1e-5
@@ -29,7 +32,7 @@ def train(args):
         default_root_dir=args.checkpoint_dir,
         logger=logger,
         enable_progress_bar=args.progress_bar,
-        callbacks=[lr_monitor, early_stopper],
+        callbacks=[lr_monitor, early_stopper, checkpoint_callback],
     )
     pl.seed_everything(args.seed)  # for reproducibility
     # load data and setup data
