@@ -27,6 +27,7 @@ class Encoder(nn.Module):
 
     def encode(self, sentence: Union[str, List[str]], tokenized: bool = False):
         """Encode a sentence into a vector"""
+        device = self.embeddings.weight.device
         with torch.no_grad():
             if not tokenized:
                 tokens = word_tokenize(sentence.lower())
@@ -35,7 +36,9 @@ class Encoder(nn.Module):
             indices = torch.LongTensor(
                 [self.vocab.word2idx[token] for token in tokens]
             ).unsqueeze(0)
+            indices.to(device)
             lens = torch.LongTensor([len(tokens)]).unsqueeze(0)
+            lens.to(device)
             return self.forward((indices, lens))
 
 

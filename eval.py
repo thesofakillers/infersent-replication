@@ -18,10 +18,10 @@ def batcher(params, batch):
     """
     batcher function needed for SentEval
     """
-    model = params["model"]
+    encoder = params["encoder"]
     sent_embs = np.array(
         [
-            model.encoder.encode(sentence if len(sentence) > 0 else ".", True).numpy()
+            encoder.encode(sentence if len(sentence) > 0 else ["."], True).numpy()
             for sentence in batch
         ]
     ).squeeze(1)
@@ -40,8 +40,12 @@ def eval_senteval(args, model):
         "tenacity": 3,
         "epoch_size": 2,
     }
+    # get device
+    device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
+    # set model to device
+    encoder = model.encoder.to(device)
     # so that we can pass the model to the batcher function somehow
-    params["model"] = model
+    params["encoder"] = encoder
     # initialize the SentEval engine
     se = senteval.engine.SE(params, batcher)
     # here are the tasks we want to evaluate on: same as the InferSent paper
