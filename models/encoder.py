@@ -140,6 +140,8 @@ class MaxPoolBiLSTM(Encoder):
         out_padded, _sent_lens = nn.utils.rnn.pad_packed_sequence(
             out_packed, batch_first=True
         )
-        # we take maxpool across L to get (B x 2 * H)
-        out, _out_idxs = torch.max(out_padded, dim=1)
+        # we take maxpool across L to get (B x 2 * H), but need to ignore 0s
+        with torch.no_grad():
+            out_padded[out_padded == 0] = -1e9
+        out, _max_idxs = torch.max(out_padded, dim=1)
         return out
