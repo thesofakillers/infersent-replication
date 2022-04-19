@@ -5,7 +5,7 @@ import torch
 import pytorch_lightning as pl
 
 from models.infersent import InferSent
-from data import Vocabulary, SNLIDataModule
+from data import Vocabulary, SNLIDataModule, GloVe, align_glove_to_vocab
 import utils
 
 
@@ -45,8 +45,8 @@ def train(args):
         aligned_glove = torch.load(args.aligned_glove)
     else:
         # otherwise we have to compute it from glove and our vocab
-        glove = data.GloVe(args.glove, args.glove_variant)
-        aligned_glove = data.align_glove_to_vocab(glove, snli.vocab)
+        glove = GloVe(args.glove, args.glove_variant)
+        aligned_glove = align_glove_to_vocab(glove, snli.vocab)
     # if checkpoint provided, load model from it, otherwise initialize new model
     if args.checkpoint_path:
         model = InferSent.load_from_checkpoint(args.checkpoint_path)
