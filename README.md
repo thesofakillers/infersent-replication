@@ -105,12 +105,20 @@ We also make use of the SentEval datasets. To download them, visit the senteval
 repository and run
 
 ```terminal
-./data/downstream/get_transfer_data.bash
+cd .data/downstream/
+./get_transfer_data.bash
 ```
 
-You may want to edit line 12 of `get_transfer_data.bash` so that the data is
-downloaded to a directory of your choice. Keep this directory in mind as we will
-then point to it when using SentEval for evaluation.
+You may then rsync or mv the `downstream/` directory to a directory of choice.
+Keep this directory in mind as we will then point to it when using SentEval for
+evaluation. For example
+
+```terminal
+rsync -r -v -h senteval/data/downstream infersent-replication/data/
+```
+
+we would then point to `infersent-replication/data` when using SentEval for
+evaluation
 
 ## Usage
 
