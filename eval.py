@@ -21,7 +21,7 @@ def batcher(params, batch):
     encoder = params["encoder"]
     sent_embs = np.array(
         [
-            encoder.encode(sentence if len(sentence) > 0 else ["."], True).numpy()
+            encoder.encode(sentence if len(sentence) > 0 else ["."], True).cpu().numpy()
             for sentence in batch
         ]
     ).squeeze(1)
