@@ -70,6 +70,11 @@ class InferSent(pl.LightningModule):
         self.log_dict({"val_loss": loss, "val_acc": acc}, prog_bar=True)
         return loss
 
+    def test_step(self, batch, batch_idx):
+        """Test step"""
+        loss, acc = self._shared_step(batch)
+        self.log_dict({"test_loss": loss, "test_acc": acc})
+
     def configure_optimizers(self):
         """Handles optimizers and schedulers"""
         # "we use SGD with a learning rate of 0.1"
