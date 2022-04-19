@@ -33,12 +33,12 @@ class Encoder(nn.Module):
                 tokens = word_tokenize(sentence.lower())
             else:
                 tokens = [token.lower() for token in sentence]
-            indices = torch.LongTensor(
-                [self.vocab.word2idx[token] for token in tokens]
-            ).unsqueeze(0)
-            indices.to(device)
-            lens = torch.LongTensor([len(tokens)]).unsqueeze(0)
-            lens.to(device)
+            indices = (
+                torch.LongTensor([self.vocab.word2idx[token] for token in tokens])
+                .unsqueeze(0)
+                .to(device)
+            )
+            lens = torch.LongTensor([len(tokens)]).unsqueeze(0).to(device)
             return self.forward((indices, lens))
 
 
