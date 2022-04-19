@@ -21,9 +21,7 @@ def batcher(params, batch):
     model = params["model"]
     sent_embs = np.array(
         [
-            model.encoder.encode(" ".join(sentence) if len(sentence) > 0 else ".")
-            .detach()
-            .numpy()
+            model.encoder.encode(sentence if len(sentence) > 0 else ".", True).numpy()
             for sentence in batch
         ]
     ).squeeze(1)

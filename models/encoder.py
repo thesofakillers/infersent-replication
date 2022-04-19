@@ -1,3 +1,5 @@
+from typing import Union, List
+
 import torch
 import torch.nn as nn
 from nltk.tokenize import word_tokenize
@@ -23,10 +25,13 @@ class Encoder(nn.Module):
         """Forward pass: to be implemented in subclasses"""
         raise NotImplementedError
 
-    def encode(self, sentence: str):
+    def encode(self, sentence: Union[str, List[str]], tokenized: bool = False):
         """Encode a sentence into a vector"""
         with torch.no_grad():
-            tokens = word_tokenize(sentence.lower())
+            if not tokenized:
+                tokens = word_tokenize(sentence.lower())
+            else:
+                tokens = [token.lower() for token in sentence]
             indices = torch.LongTensor(
                 [self.vocab.word2idx[token] for token in tokens]
             ).unsqueeze(0)
