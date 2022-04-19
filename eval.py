@@ -1,23 +1,77 @@
 import argparse
 import pickle
 import os
+from warnings import simplefilter
+import logging
 
 import torch
 import pytorch_lightning as pl
 from models.infersent import InferSent
+import senteval
+import numpy as np
+from sklearn.exceptions import ConvergenceWarning
 
 from data import Vocabulary, SNLIDataModule
 
 
+def batcher(params, batch):
+    """
+    batcher function needed for SentEval
+    """
+    model = params["model"]
+    sent_embs = np.array(
+        [
+            model.encoder.encode(" ".join(sentence) if len(sentence) > 0 else ".")
+            .detach()
+            .numpy()
+            for sentence in batch
+        ]
+    ).squeeze(1)
+    return sent_embs
+
+
 def eval_senteval(args, model):
     """Evaluates a model on SentEval, serializing the results"""
-    # TODO
-    pass
+    logging.basicConfig(format="%(asctime)s : %(message)s", level=logging.DEBUG)
+    # using prototyping config from the SentEval github
+    params = {"task_path": args.data_dir, "usepytorch": args.gpu, "kfold": 5}
+    params["classifier"] = {
+        "nhid": 0,
+        "optim": "rmsprop",
+        "batch_size": 128,
+        "tenacity": 3,
+        "epoch_size": 2,
+    }
+    # so that we can pass the model to the batcher function somehow
+    params["model"] = model
+    # initialize the SentEval engine
+    se = senteval.engine.SE(params, batcher)
+    # here are the tasks we want to evaluate on: same as the InferSent paper
+    tasks = [
+        "MR",
+        "CR",
+        "SUBJ",
+        "MPQA",
+        "SST2",
+        "TREC",
+        "MRPC",
+        "SICKRelatedness",
+        "SICKEntailment",
+        "STS14",
+    ]
+    # do the evaluation
+    results = se.eval(tasks)
+
+    print("SentEval Evaluation complete. Saving results...")
+    # create directory if it doesn't exist
+    if not os.path.exists(args.senteval_output_dir):
+        os.makedirs(args.senteval_output_dir)
+    with open(os.path.join(args.senteval_output_dir, "results.pkl"), "wb") as f:
+        pickle.dump(results, f)
 
 
 def eval_snli(args, model):
     """Evaluates a model on SNLI, serializing the results"""
-    pl.seed_everything(args.seed)  # for reproducibility
 
     snli = SNLIDataModule(
         args.batch_size, args.data_dir, args.num_workers, args.cached_vocab
@@ -60,6 +114,9 @@ def eval_total(args):
 
 
 if __name__ == "__main__":
+    # ignore convergence warnings
+    simplefilter("ignore", category=ConvergenceWarning)
+    # defined args
     parser = argparse.ArgumentParser(
         description="Evaluate a trained model on SNLI and SentEval"
     )
@@ -67,7 +124,7 @@ if __name__ == "__main__":
         "-d",
         "--data-dir",
         type=str,
-        default="data/",
+        default="data",
         help="path to data directory",
     )
     parser.add_argument(
@@ -140,6 +197,12 @@ if __name__ == "__main__":
     parser.add_argument(
         "-s", "--seed", type=int, help="the random seed to use", default=42
     )
-
+    parser.add_argument(
+        "-g", "--gpu", action="store_true", help="whether to use gpu", default=False
+    )
+    # parse args
     args = parser.parse_args()
+    # set seed for reproducibility
+    pl.seed_everything(args.seed)
+    # and evaluate
     eval_total(args)
