@@ -5,7 +5,7 @@ description = "Partial replication of Conneau et al. (2017)"
 authors = ["Giulio Starace <giulio.starace@gmail.com>"]
 
 [tool.poetry.dependencies]
-python = "^3.10"
+python = ">=3.10,<3.11"
 pytorch-lightning = "^1.6.0"
 datasets = "^2.0.0"
 torch = "^1.11.0"
@@ -14,6 +14,8 @@ notebook = "^6.4.10"
 tqdm = "^4.64.0"
 ipywidgets = "^7.7.0"
 nltk = "^3.7"
+scipy = "^1.8.0"
+scikit-learn = "^1.0.2"
 
 [tool.poetry.dev-dependencies]
 flake8 = "^4.0.1"

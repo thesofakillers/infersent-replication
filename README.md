@@ -18,7 +18,7 @@ training scheme" as described in the original paper. In particular:
 
 Evaluation is then done with [SentEval](https://aclanthology.org/L18-1269/).
 
-## Requirements
+## Requirements and Setup
 
 Details such as python and package versions can be found in the generated
 [pyproject.toml](pyproject.toml) and [poetry.lock](poetry.lock) files.
@@ -42,6 +42,26 @@ this case, simply run
 ```terminal
 pip install -r requirements.txt
 ```
+
+Once these packages have been installed, we have to manually set up
+[SentEval](https://github.com/facebookresearch/SentEval), since the FaceBook
+researchers and engineers are not paid enough to make a PyPI package like
+everyone else. To do this, first clone the repository to a folder of your
+choice:
+
+```terminal
+git clone git@github.com:facebookresearch/SentEval.git
+```
+
+Then navigate to the SentEval repository and install it to the same environment
+as used above.
+
+```terminal
+cd SentEval
+python setup install
+```
+
+Finally,
 
 ## Repository Structure
 
@@ -70,9 +90,9 @@ The repository does not include the datasets and pretrained embeddings used to
 train the models mentioned above, nor the trained model checkpoints themselves,
 as these are inappropriate for git version control.
 
-The datasets used are public and will be automatically downloaded when
-necessary. The same applies to the model checkpoints, hosted on the
-[Internet Archive](https://archive.org).
+The datasets relative to NLI training are public and will be automatically
+downloaded when necessary. The same applies to the model checkpoints, hosted on
+the [Internet Archive](https://archive.org).
 
 The public datasets and embeddings used are
 [SNLI](https://nlp.stanford.edu/projects/snli/) and 840B-token 300-d
@@ -80,6 +100,17 @@ The public datasets and embeddings used are
 have these locally and do not wish to re-download them, simply move (or
 symbolically link them) to a shared data directory, and then signal this
 directory and the resulting paths in the arguments for the scripts.
+
+We also make use of the SentEval datasets. To download them, visit the senteval
+repository and run
+
+```terminal
+./data/downstream/get_transfer_data.bash
+```
+
+You may want to edit line 12 of `get_transfer_data.bash` so that the data is
+downloaded to a directory of your choice. Keep this directory in mind as we will
+then point to it when using SentEval for evaluation.
 
 ## Usage
 
