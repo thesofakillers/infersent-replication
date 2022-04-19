@@ -64,9 +64,10 @@ def eval_senteval(args, model):
 
     print("SentEval Evaluation complete. Saving results...")
     # create directory if it doesn't exist
-    if not os.path.exists(args.senteval_output_dir):
-        os.makedirs(args.senteval_output_dir)
-    with open(os.path.join(args.senteval_output_dir, "results.pkl"), "wb") as f:
+    save_dir = os.path.join(args.senteval_output_dir, args.encoder_type)
+    if not os.path.exists(save_dir):
+        os.makedirs(save_dir)
+    with open(os.path.join(save_dir, "results.pkl"), "wb") as f:
         pickle.dump(results, f)
 
 
@@ -92,11 +93,12 @@ def eval_snli(args, model):
 
     print("SNLI Evaluation complete. Saving results...")
     # create directory if it doesn't exist
-    if not os.path.exists(args.snli_output_dir):
-        os.makedirs(args.snli_output_dir)
-    with open(os.path.join(args.snli_output_dir, "val.pkl"), "wb") as f:
+    save_dir = os.path.join(args.snli_output_dir, args.encoder_type)
+    if not os.path.exists(save_dir):
+        os.makedirs(save_dir)
+    with open(os.path.join(save_dir, "val.pkl"), "wb") as f:
         pickle.dump(val_results, f)
-    with open(os.path.join(args.snli_output_dir, "test.pkl"), "wb") as f:
+    with open(os.path.join(save_dir, "test.pkl"), "wb") as f:
         pickle.dump(test_results, f)
 
 
