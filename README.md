@@ -95,8 +95,9 @@ downloaded when necessary.
 
 The model checkpoints and evaluation results, hosted on the
 [Internet Archive](https://archive.org), can be downloaded from
-[this link](TODO). Please download and unzip the file, placing the resulting
-`logs/` directory in the repository root.
+[this link](https://archive.org/download/thesofakillers-infersent-logs/logs.zip).
+Please download and unzip the file, placing the resulting `logs/` directory in
+the repository root.
 
 The public datasets and embeddings used are
 [SNLI](https://nlp.stanford.edu/projects/snli/) and 840B-token 300-d
