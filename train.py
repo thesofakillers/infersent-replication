@@ -70,7 +70,7 @@ if __name__ == "__main__":
         "-e",
         "--encoder-type",
         type=str,
-        help="one of 'baseline', 'lstm', 'bilstm', maxpoolbilstm'",
+        help="one of 'baseline', 'lstm', 'bilstm', 'maxpoolbilstm'",
         required=True,
     )
     parser.add_argument(
@@ -97,7 +97,7 @@ if __name__ == "__main__":
         default="logs/",
     )
     parser.add_argument(
-        "-d", "--data-dir", type=str, help="path to data directory", default="data/"
+        "-d", "--data-dir", type=str, help="path to data directory", default="data"
     )
     parser.add_argument(
         "-g",
