@@ -66,7 +66,11 @@ def eval_senteval(args, model):
 
     print("SentEval Evaluation complete. Saving results...")
     # create directory if it doesn't exist
-    save_dir = os.path.join(args.senteval_output_dir, args.encoder_type)
+    save_dir = os.path.join(
+        args.output_dir,
+        args.encoder_type,
+        args.senteval_output_dir,
+    )
     if not os.path.exists(save_dir):
         os.makedirs(save_dir)
     with open(os.path.join(save_dir, "results.pkl"), "wb") as f:
@@ -95,7 +99,11 @@ def eval_snli(args, model):
 
     print("SNLI Evaluation complete. Saving results...")
     # create directory if it doesn't exist
-    save_dir = os.path.join(args.snli_output_dir, args.encoder_type)
+    save_dir = os.path.join(
+        args.output_dir,
+        args.encoder_type,
+        args.snli_output_dir,
+    )
     if not os.path.exists(save_dir):
         os.makedirs(save_dir)
     with open(os.path.join(save_dir, "val.pkl"), "wb") as f:
@@ -132,13 +140,20 @@ if __name__ == "__main__":
         help="path to data directory",
     )
     parser.add_argument(
+        "-o",
+        "--output-dir",
+        type=str,
+        help="Parent directory for saving results",
+        default="logs/",
+    )
+    parser.add_argument(
         "--snli", action="store_true", help="Evaluate on SNLI", default=False
     )
     parser.add_argument(
         "--snli-output-dir",
         type=str,
         help="Directory to save SNLI results",
-        default="results/snli/",
+        default="eval/snli/",
     )
     parser.add_argument(
         "--senteval", action="store_true", help="Evaluate on SentEval", default=False
@@ -147,7 +162,7 @@ if __name__ == "__main__":
         "--senteval-output-dir",
         type=str,
         help="Directory to save SentEval results",
-        default="results/senteval/",
+        default="eval/senteval/",
     )
     parser.add_argument(
         "-e",
