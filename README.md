@@ -91,8 +91,12 @@ train the models mentioned above, nor the trained model checkpoints themselves,
 as these are inappropriate for git version control.
 
 The datasets relative to NLI training are public and will be automatically
-downloaded when necessary. The same applies to the model checkpoints, hosted on
-the [Internet Archive](https://archive.org).
+downloaded when necessary.
+
+The model checkpoints and evaluation results, hosted on the
+[Internet Archive](https://archive.org), can be downloaded from
+[this link](TODO). Please download and unzip the file, placing the resulting
+`logs/` directory in the repository root.
 
 The public datasets and embeddings used are
 [SNLI](https://nlp.stanford.edu/projects/snli/) and 840B-token 300-d
@@ -102,16 +106,16 @@ symbolically link them) to a shared data directory, and then signal this
 directory and the resulting paths in the arguments for the scripts.
 
 We also make use of the SentEval datasets. To download them, visit the senteval
-repository and run
+repository you previously cloned and run
 
 ```terminal
 cd .data/downstream/
 ./get_transfer_data.bash
 ```
 
-You may then rsync or mv the `downstream/` directory to a directory of choice.
-Keep this directory in mind as we will then point to it when using SentEval for
-evaluation. For example
+Once this is complete, you may then rsync or mv the `downstream/` directory to a
+directory of choice. Keep this directory in mind as we will then point to it
+when using SentEval for evaluation. For example
 
 ```terminal
 rsync -r -v -h senteval/data/downstream infersent-replication/data/
@@ -176,9 +180,10 @@ values.
 For usage:
 
 ```stdout
-usage: train.py [-h] -e ENCODER_TYPE [-c CHECKPOINT_PATH] [-cd CHECKPOINT_DIR]
-                [-s SEED] [-p] [-l LOG_DIR] [-d DATA_DIR] [-g GLOVE]
-                [-gv GLOVE_VARIANT] [-ag ALIGNED_GLOVE] [-b BATCH_SIZE]
+usage: train.py [-h] -e ENCODER_TYPE [-c CHECKPOINT_PATH] [-s SEED] [-p]
+                [-l LOG_DIR] [-d DATA_DIR] [-g GLOVE] [-gv GLOVE_VARIANT]
+                [-ag ALIGNED_GLOVE] [-b BATCH_SIZE] [-cv CACHED_VOCAB]
+                [-w NUM_WORKERS]
 
 Trains an InferSent model. Test-set evaluation is deferred to eval.py
 
@@ -188,9 +193,6 @@ options:
                         one of 'baseline', 'lstm', 'bilstm', maxpoolbilstm'
   -c CHECKPOINT_PATH, --checkpoint-path CHECKPOINT_PATH
                         path for loading previously saved checkpoint
-  -cd CHECKPOINT_DIR, --checkpoint-dir CHECKPOINT_DIR
-                        where to save checkpoints. Defaults to the current
-                        working directory
   -s SEED, --seed SEED  the random seed to use
   -p, --progress-bar    whether to show the progress bar
   -l LOG_DIR, --log-dir LOG_DIR
@@ -205,13 +207,57 @@ options:
                         path to aligned glove embeddings tensor
   -b BATCH_SIZE, --batch-size BATCH_SIZE
                         batch size for training
+  -cv CACHED_VOCAB, --cached-vocab CACHED_VOCAB
+                        path to save/load serialized vocabulary
+  -w NUM_WORKERS, --num-workers NUM_WORKERS
+                        number of workers for data loading
+```
 
+### Evaluation
+
+We use `eval.py` for evaluation, both on the original SNLI task as well as on
+SentEval, configurably via the command-line arguments.
+
+For usage:
+
+```stdout
+usage: eval.py [-h] [-d DATA_DIR] [-o OUTPUT_DIR] [--snli]
+               [--snli-output-dir SNLI_OUTPUT_DIR] [--senteval]
+               [--senteval-output-dir SENTEVAL_OUTPUT_DIR] -e ENCODER_TYPE -c
+               CHECKPOINT_PATH [-ag ALIGNED_GLOVE] [-cv CACHED_VOCAB]
+               [-w NUM_WORKERS] [-b BATCH_SIZE] [-p] [-s SEED] [-g]
+
+Evaluate a trained model on SNLI and SentEval
+
+options:
+  -h, --help            show this help message and exit
+  -d DATA_DIR, --data-dir DATA_DIR
+                        path to data directory
+  -o OUTPUT_DIR, --output-dir OUTPUT_DIR
+                        Parent directory for saving results
+  --snli                Evaluate on SNLI
+  --snli-output-dir SNLI_OUTPUT_DIR
+                        Directory to save SNLI results
+  --senteval            Evaluate on SentEval
+  --senteval-output-dir SENTEVAL_OUTPUT_DIR
+                        Directory to save SentEval results
+  -e ENCODER_TYPE, --encoder-type ENCODER_TYPE
+                        one of 'baseline', 'lstm', 'bilstm', maxpoolbilstm'
+  -c CHECKPOINT_PATH, --checkpoint-path CHECKPOINT_PATH
+                        path to the checkpoint file
+  -ag ALIGNED_GLOVE, --aligned-glove ALIGNED_GLOVE
+                        path to the aligned glove file
+  -cv CACHED_VOCAB, --cached-vocab CACHED_VOCAB
+                        path to save/load serialized vocabulary
+  -w NUM_WORKERS, --num-workers NUM_WORKERS
+                        number of workers for data loading
+  -b BATCH_SIZE, --batch-size BATCH_SIZE
+                        batch size
+  -p, --progress-bar    whether to show the progress bar
+  -s SEED, --seed SEED  the random seed to use
+  -g, --gpu             whether to use gpu
 ```
 
 ### Inference
-
-TODO
-
-### Evaluation
 
 TODO
