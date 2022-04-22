@@ -261,4 +261,27 @@ options:
 
 ### Inference
 
-TODO
+We provide a simple script for performing inference, `infer.py`. This can be
+used either to predict the entailment of a pair of sentences, or to embed a
+particular sentence. For usage:
+
+```stdout
+usage: infer.py [-h] -m MODE -c CHECKPOINT_PATH [-ag ALIGNED_GLOVE] -s1
+                SENTENCE_1 [-s2 SENTENCE_2] [-map]
+
+Script for inference
+
+options:
+  -h, --help            show this help message and exit
+  -m MODE, --mode MODE  Mode for inference. One of 'nli' or 'sentembed'
+  -c CHECKPOINT_PATH, --checkpoint-path CHECKPOINT_PATH
+                        Path to the checkpoint file
+  -ag ALIGNED_GLOVE, --aligned-glove ALIGNED_GLOVE
+                        path to the aligned glove file
+  -s1 SENTENCE_1, --sentence-1 SENTENCE_1
+                        Sentence to embed if embedding, premise if NLI'ing
+  -s2 SENTENCE_2, --sentence-2 SENTENCE_2
+                        Hypothesis. Only required if NLI'ing
+  -map, --map           Flag whether to return one of {'entailment',
+                        'neutral', 'contradiction'} instead of {0, 1, 2}
+```
