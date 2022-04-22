@@ -36,7 +36,7 @@ poetry install
 ```
 
 We also provide a [requirements.txt](requirements.txt) file for
-[pip](https://pypi.org/project/pip/) users who do not wish to use poetry.. In
+[pip](https://pypi.org/project/pip/) users who do not wish to use poetry. In
 this case, simply run
 
 ```terminal
@@ -54,37 +54,14 @@ git clone git@github.com:facebookresearch/SentEval.git
 ```
 
 Then navigate to the SentEval repository and install it to the same environment
-as used above.
+as used above:
 
 ```terminal
 cd SentEval
 python setup install
 ```
 
-Finally,
-
-## Repository Structure
-
-```bash
-.
-├── models                             # models folder
-│   ├── __init__.py
-│   ├── encoder.py                     # sentence encoder models
-│   └── infersent.py                   # Generic NLI model
-├── utils.py                           # for miscellaneous utils
-├── data.py                            # for data loading and processing
-├── train.py                           # for model training
-├── eval.py                            # for model evaluation
-├── infer.py                           # for model inference
-├── demo.ipynb                         # demo jupyter notebook
-├── pyproject.toml                     # repo metadata
-├── poetry.lock
-├── gen_pip_reqs.sh                    # script for gen. pip requirements
-└── README.md                          # you are here
-
-```
-
-## Data, Pretrained Embeddings and Models
+### Data, Pretrained Embeddings and Models
 
 The repository does not include the datasets and pretrained embeddings used to
 train the models mentioned above, nor the trained model checkpoints themselves,
@@ -124,6 +101,32 @@ rsync -r -v -h senteval/data/downstream infersent-replication/data/
 
 we would then point to `infersent-replication/data` when using SentEval for
 evaluation
+
+## Repository Structure
+
+```bash
+.
+├── models/                            # models folder
+│   ├── __init__.py
+│   ├── encoder.py                     # sentence encoder models
+│   └── infersent.py                   # Generic NLI model
+├── data/                              # data folder (not committed)
+├── logs/                              # logs folder (not committed)
+├── utils.py                           # for miscellaneous utils
+├── data.py                            # for data loading and processing
+├── train.py                           # for model training
+├── eval.py                            # for model evaluation
+├── infer.py                           # for model inference
+├── demo.ipynb                         # demo jupyter notebook
+├── error_analysis.md                  # error analysis markdown file
+├── error_analysis.pdf                 # error analysis pdf file
+├── images/                            # images folder for error_analysis.md
+├── pyproject.toml                     # repo metadata
+├── poetry.lock
+├── gen_pip_reqs.sh                    # script for gen. pip requirements
+└── README.md                          # you are here
+
+```
 
 ## Usage
 
